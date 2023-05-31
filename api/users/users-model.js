@@ -18,8 +18,12 @@ function bul() {
       }
     ]
    */
+  return db("users as u")
+         .leftJoin("roles as r","r.role_id","u.role_id")
+         .select("u.user_id","u.username","r.role_name");
 }
-
+//goreBul({username:"veysel"});
+//goreBul({user_id:1})
 function goreBul(filtre) {
   /**
     2 tabloyu birleştirmeniz gerekiyor
@@ -34,6 +38,10 @@ function goreBul(filtre) {
       }
     ]
    */
+    return db("users as u")
+    .leftJoin("roles as r","r.role_id","u.role_id")
+    .select("u.*","r.role_name")
+    .where("u.username",filtre);
 }
 
 function idyeGoreBul(user_id) {
@@ -47,6 +55,10 @@ function idyeGoreBul(user_id) {
       "role_name": "instructor"
     }
    */
+    return db("users as u")
+    .leftJoin("roles as r","r.role_id","u.role_id")
+    .select("u.user_id","u.username","r.role_name")
+    .where("u.user_id",user_id).first();
 }
 
 /**
