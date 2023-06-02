@@ -19,8 +19,8 @@ function bul() {
     ]
    */
   return db("users as u")
-         .leftJoin("roles as r","r.role_id","u.role_id")
-         .select("u.user_id","u.username","r.role_name");
+         .leftJoin("comments as c","c.user_id","u.user_id")
+         .select("u.user_id","u.username","c.comment_text");
 }
 //goreBul({username:"veysel"});
 //goreBul({user_id:1})
@@ -39,8 +39,8 @@ function goreBul(filtre) {
     ]
    */
     return db("users as u")
-    .leftJoin("roles as r","r.role_id","u.role_id")
-    .select("u.*","r.role_name")
+    .leftJoin("comments as c","c.user_id","u.user_id")
+    .select("u.*","c.comment_text")
     .where("u.username",filtre);
 }
 
@@ -56,8 +56,8 @@ function idyeGoreBul(user_id) {
     }
    */
     return db("users as u")
-    .leftJoin("roles as r","r.role_id","u.role_id")
-    .select("u.user_id","u.username","r.role_name")
+    .leftJoin("comments as c","c.user_id","u.user_id")
+    .select("u.user_id","u.username","c.comment_text")
     .where("u.user_id",user_id).first();
 }
 
@@ -79,26 +79,62 @@ function idyeGoreBul(user_id) {
     "role_name": "team lead"
   }
  */
-async function ekle({ username, password, role_name }) { // bu kısım hazır
-  let created_user_id
-  await db.transaction(async trx => {
-    let role_id_to_use
-    const [role] = await trx('roles').where('role_name', role_name)
-    if (role) {
-      role_id_to_use = role.role_id
-    } else {
-      const [role_id] = await trx('roles').insert({ role_name: role_name })
-      role_id_to_use = role_id
+  async function ekle({ username, password, email }) {
+    try {
+      let created_user_id;
+  
+      await db.transaction(async (trx) => {
+        const [user_id] = await trx("users").insert({
+          username,
+          password,
+          email,
+        });
+  
+        created_user_id = user_id;
+      });
+  
+      return await idyeGoreBul(created_user_id);
+    } catch (error) {
+      throw error;
     }
-    const [user_id] = await trx('users').insert({ username, password, role_id: role_id_to_use })
-    created_user_id = user_id
-  })
-  return idyeGoreBul(created_user_id)
-}
+  }
+  
+
+
+
+
+  async function add(username, comment) {
+    if (!comment) {
+      throw new Error('Yorum boş olamaz');
+    }
+  
+    const user = await db('users').where('username', username).first();
+  
+    if (!user) {
+      throw new Error('Kullanıcı bulunamadı');
+    }
+  
+    const [comment_id] = await db('comments').insert({
+      comment_text: comment,
+      user_id: user.user_id
+    });
+  
+    return {
+   
+      username: user.username,
+      comment_text: comment
+    };
+  }
+  
+  
+
+  
+  
+  
 
 module.exports = {
   ekle,
   bul,
   goreBul,
-  idyeGoreBul,
+  idyeGoreBul,add
 };

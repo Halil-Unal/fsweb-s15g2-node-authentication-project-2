@@ -4,39 +4,25 @@ const jwt = require("jsonwebtoken");
 const bcryptjs = require("bcryptjs");
 
 const sinirli = (req, res, next) => {
-  /*
-    Eğer Authorization header'ında bir token sağlanmamışsa:
-    status: 401
-    {
-      "message": "Token gereklidir"
+  try {
+    let authHeader = req.headers["authorization"];
+    if (!authHeader) {
+      res.status(401).json({ message: "Token gereklidir" });
+    } else {
+      jwt.verify(authHeader, JWT_SECRET, (err, decodedToken) => {
+        if (err) {
+          res.status(401).json({ message: "Token gecersizdir" });
+        } else {
+          req.username = decodedToken.username; // Kullanıcı adını burada alıyoruz
+         
+          next();
+        }
+      });
     }
-
-    Eğer token doğrulanamıyorsa:
-    status: 401
-    {
-      "message": "Token gecersizdir"
-    }
-
-    Alt akıştaki middlewarelar için hayatı kolaylaştırmak için kodu çözülmüş tokeni req nesnesine koyun!
-  */
-    try {
-      let authHeader = req.headers["authorization"]; // req.headers.authorization
-      if(!authHeader){
-        res.status(401).json({message:"Token gereklidir"});
-      }else{
-        jwt.verify(authHeader,JWT_SECRET,(err,decodedToken)=>{
-          if(err){
-            res.status(401).json({message:"token gecersizdir"});
-          }else{
-            req.decodedToken = decodedToken;
-            next();
-          }
-        })
-      }
-    } catch (error) {
-      next(error);
-    }
-}
+  } catch (error) {
+    next(error);
+  }
+};
 
 const sadece = role_name => (req, res, next) => {
   /*
@@ -136,8 +122,8 @@ const rolAdiGecerlimi = (req, res, next) => {
 
 const checkPayload = (req,res,next)=>{
   try {
-    let {username,password} = req.body;
-    if(!username || !password){
+    let {username,password,email} = req.body;
+    if(!username || !password|| !email){
       res.status(400).json({messsage:"Eksik alan var"});
     }else{
       next();

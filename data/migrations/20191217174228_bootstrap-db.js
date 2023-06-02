@@ -1,25 +1,25 @@
 exports.up = function (knex) {
   return knex.schema
-    .createTable('roles', roles => {
-      roles.increments('role_id')
-      roles.string('role_name', 32).notNullable().unique()
-    })
     .createTable('users', users => {
       users.increments('user_id')
       users.string('username', 128).notNullable().unique()
       users.string('password', 128).notNullable()
-      users.integer('role_id')
-        .unsigned()
-        .notNullable()
-        .references('role_id')
-        .inTable('roles')
-        .onUpdate('RESTRICT')
-        .onDelete('RESTRICT')
+      users.string('email', 128).notNullable().unique()
     })
-}
+    .createTable('comments', comments => {
+      comments.increments('comment_id')
+      comments.string('comment_text', 32)
+      comments
+        .integer('user_id')
+        .unsigned()
+        .references('user_id')
+        .inTable('users')
+        .onUpdate('CASCADE') // İlişkili kayıtları güncelle
+        .onDelete('CASCADE') // İlişkili kayıtları sil
+        .notNullable()
+    });
+};
 
 exports.down = function (knex) {
-  return knex.schema
-    .dropTableIfExists('users')
-    .dropTableIfExists('roles')
-}
+  return knex.schema.dropTableIfExists('comments').dropTableIfExists('users');
+};
